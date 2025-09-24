@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualización de Series de Tiempo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="fas fa-chart-line me-2"></i>
+                Dashboard Series de Tiempo
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-home me-1"></i>Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/visualization">
+                            <i class="fas fa-chart-line me-1"></i>Visualización
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/decomposition">
+                            <i class="fas fa-project-diagram me-1"></i>Descomposición
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/analisis_comparativo">
+                            <i class="fas fa-analytics me-1"></i>Análisis Comparativo
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/modelo_de_serie">
+                            <i class="fas fa-brain me-1"></i>Modelo de Serie
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid" style="margin-top: 76px;">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-2 d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                        <span>Navegación</span>
+                    </h6>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/visualization">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Visualización
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/decomposition">
+                                <i class="fas fa-project-diagram me-2"></i>
+                                Descomposición H-W
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/analisis_comparativo">
+                                <i class="fas fa-analytics me-2"></i>
+                                Análisis Comparativo
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/modelo_de_serie">
+                                <i class="fas fa-brain me-2"></i>
+                                Modelo de Serie
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-10 ms-sm-auto px-md-4">
+                <!-- Header Section -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="fas fa-chart-line text-primary me-2"></i>
+                        Visualización de Series de Tiempo
+                    </h1>
+                </div>
+
+                <!-- Step 1: Upload Data -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-upload me-2"></i>
+                                    Paso 1: Cargar Datos
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <form id="uploadForm" enctype="multipart/form-data">
+                                            <div class="mb-3">
+                                                <label for="fileInput" class="form-label">Seleccionar archivo</label>
+                                                <input type="file" class="form-control" id="fileInput" name="file" accept=".csv,.xlsx,.xls,.txt" required>
+                                                <div class="form-text">Formatos soportados: CSV, Excel (.xlsx, .xls), TXT (MS-DOS)</div>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-cloud-upload-alt me-2"></i>
+                                                Cargar Archivo
+                                            </button>
+                                        </form>
+                                        
+                                        <!-- Upload Status -->
+                                        <div id="uploadStatus" class="mt-3"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="alert alert-info">
+                                            <h6><i class="fas fa-info-circle me-2"></i>Tipos de gráficos disponibles:</h6>
+                                            <ul class="mb-0">
+                                                <li>Gráfico de líneas de la serie temporal</li>
+                                                <li>Gráfico de dispersión de puntos</li>
+                                                <li>Gráficos de series retardadas (lag plots)</li>
+                                                <li>Función de autocorrelación</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Column Selection -->
+                <div class="row mb-4" id="columnSelectionStep" style="display: none;">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-columns me-2"></i>
+                                    Paso 2: Configurar Visualización
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label for="dateColumn" class="form-label">Columna de Fechas</label>
+                                        <select class="form-select" id="dateColumn" required>
+                                            <option value="">Seleccionar columna...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="valueColumn" class="form-label">Columna de Valores</label>
+                                        <select class="form-select" id="valueColumn" required>
+                                            <option value="">Seleccionar columna...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="plotType" class="form-label">Tipo de Gráfico</label>
+                                        <select class="form-select" id="plotType">
+                                            <option value="line">Líneas</option>
+                                            <option value="scatter">Dispersión</option>
+                                            <option value="both">Líneas + Puntos</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button type="button" class="btn btn-success me-2" id="plotBtn">
+                                            <i class="fas fa-chart-line me-2"></i>
+                                            Graficar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Basic Plot -->
+                <div class="row mb-4" id="basicPlotStep" style="display: none;">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-area me-2"></i>
+                                    Gráfico de Serie de Tiempo
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="basicPlotInfo"></div>
+                                <div id="basicPlot"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Lag Plots -->
+                <div class="row mb-4" id="lagPlotsStep" style="display: none;">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-project-diagram me-2"></i>
+                                    Análisis de Series Retardadas
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <label for="maxLags" class="form-label">Número máximo de lags</label>
+                                        <input type="number" class="form-control" id="maxLags" value="12" min="1" max="24">
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button type="button" class="btn btn-warning" id="lagPlotsBtn">
+                                            <i class="fas fa-play me-2"></i>
+                                            Generar Lag Plots
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div id="lagPlotsResults"></div>
+                                <div id="lagPlots"></div>
+                                <div id="autocorrPlot" class="mt-4"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="loadingSpinner" class="text-center" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Procesando datos...</p>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/visualization.js') }}"></script>
+</body>
+</html>
