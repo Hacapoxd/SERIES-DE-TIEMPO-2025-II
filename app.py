@@ -36,6 +36,79 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 plt.style.use('seaborn-v0_8')
 sns.set_palette("husl")
 
+def read_csv_with_auto_delimiter(filepath, encoding=None):
+    """
+    Read CSV file with automatic delimiter detection.
+    Tries common delimiters: comma (,), semicolon (;), tab (\t)
+    """
+    delimiters = [',', ';', '\t']
+    encodings = [encoding] if encoding else ['utf-8', 'latin-1', 'iso-8859-1', 'cp1252']
+    
+    best_df = None
+    best_score = 0
+    best_info = {'delimiter': None, 'encoding': None, 'columns': 0}
+    
+    # Try each encoding
+    for enc in encodings:
+        if enc is None:
+            continue
+            
+        try:
+            # Try each delimiter
+            for delimiter in delimiters:
+                try:
+                    # Read just a few rows to test
+                    sample_df = pd.read_csv(filepath, sep=delimiter, encoding=enc, nrows=5)
+                    
+                    # Calculate score based on:
+                    # 1. Number of columns (more is usually better)
+                    # 2. Consistent number of non-null values across rows
+                    # 3. At least 2 columns
+                    
+                    if len(sample_df.columns) < 2:
+                        continue
+                    
+                    # Check for consistent data across rows
+                    non_null_counts = [sample_df.iloc[i].notna().sum() for i in range(min(3, len(sample_df)))]
+                    consistency = 1.0 if len(set(non_null_counts)) <= 1 else 0.5
+                    
+                    # Score = number of columns * consistency factor
+                    score = len(sample_df.columns) * consistency
+                    
+                    # Bonus for having reasonable column names (not mostly numbers)
+                    named_columns = sum(1 for col in sample_df.columns if not str(col).startswith('Unnamed'))
+                    if named_columns == len(sample_df.columns):
+                        score *= 1.2
+                    
+                    if score > best_score:
+                        best_score = score
+                        best_info = {
+                            'delimiter': delimiter,
+                            'encoding': enc,
+                            'columns': len(sample_df.columns)
+                        }
+                        # Read the full file with the best parameters
+                        best_df = pd.read_csv(filepath, sep=delimiter, encoding=enc)
+                
+                except (pd.errors.EmptyDataError, pd.errors.ParserError, UnicodeDecodeError, UnicodeError):
+                    continue
+                except Exception:
+                    continue
+        
+        except Exception:
+            continue
+    
+    # If we found a good configuration, return it
+    if best_df is not None and best_score > 0:
+        print(f"Auto-detected CSV format: delimiter='{best_info['delimiter']}', encoding='{best_info['encoding']}', columns={best_info['columns']}")
+        return best_df
+    
+    # Fallback: try basic pandas read_csv with default settings
+    try:
+        return pd.read_csv(filepath)
+    except Exception as e:
+        raise Exception(f"No se pudo leer el archivo CSV. Intente con formato UTF-8 y delimitador de coma. Error: {str(e)}")
+
 @app.route('/')
 def dashboard():
     """Dashboard welcome page for time series analysis"""
@@ -291,18 +364,13 @@ def upload_data():
             # Read and process the file
             try:
                 if filename.endswith('.csv'):
-                    df = pd.read_csv(filepath)
+                    # Auto-detect delimiter for CSV files
+                    df = read_csv_with_auto_delimiter(filepath)
                 elif filename.endswith(('.xlsx', '.xls')):
                     df = pd.read_excel(filepath)
                 elif filename.endswith('.txt'):
                     # Try different separators for MS-DOS .txt files
-                    try:
-                        df = pd.read_csv(filepath, sep='\t', encoding='latin-1')
-                    except:
-                        try:
-                            df = pd.read_csv(filepath, sep=',', encoding='latin-1')
-                        except:
-                            df = pd.read_csv(filepath, sep=';', encoding='latin-1')
+                    df = read_csv_with_auto_delimiter(filepath, encoding='latin-1')
                 else:
                     return jsonify({'error': 'Formato de archivo no soportado'}), 400
                 
@@ -574,18 +642,13 @@ def safe_load_file(filename):
     # Load the file
     try:
         if secure_name.endswith('.csv'):
-            df = pd.read_csv(filepath)
+            # Auto-detect delimiter for CSV files
+            df = read_csv_with_auto_delimiter(filepath)
         elif secure_name.endswith(('.xlsx', '.xls')):
             df = pd.read_excel(filepath)
         elif secure_name.endswith('.txt'):
             # Try different separators for MS-DOS .txt files
-            try:
-                df = pd.read_csv(filepath, sep='\t', encoding='latin-1')
-            except:
-                try:
-                    df = pd.read_csv(filepath, sep=',', encoding='latin-1')
-                except:
-                    df = pd.read_csv(filepath, sep=';', encoding='latin-1')
+            df = read_csv_with_auto_delimiter(filepath, encoding='latin-1')
         else:
             return None, "Formato de archivo no soportado"
         
@@ -1034,6 +1097,210 @@ def create_comparison_plot(ts, exp_results, holt_results, winter_results):
         
     except Exception as e:
         raise Exception(f"Error creando gráfico de comparación: {str(e)}")
+
+@app.route('/get_data_info/<filename>')
+def get_data_info(filename):
+    """Get basic information about uploaded data file"""
+    try:
+        df, error = safe_load_file(filename)
+        if error:
+            return jsonify({'error': error}), 400
+        
+        return jsonify({
+            'success': True,
+            'rows': len(df),
+            'columns': df.columns.tolist(),
+            'dtypes': df.dtypes.astype(str).to_dict()
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Error al obtener información: {str(e)}'}), 500
+
+@app.route('/get_data_preview', methods=['POST'])
+def get_data_preview():
+    """Get preview of data with selected columns"""
+    try:
+        data = request.get_json()
+        filename = data.get('filename')
+        time_column = data.get('time_column')
+        value_column = data.get('value_column')
+        limit = data.get('limit', 10)
+        
+        if not all([filename, time_column, value_column]):
+            return jsonify({'error': 'Faltan parámetros requeridos'}), 400
+        
+        df, error = safe_load_file(filename)
+        if error:
+            return jsonify({'error': error}), 400
+        
+        # Check if columns exist
+        if time_column not in df.columns or value_column not in df.columns:
+            return jsonify({'error': 'Columnas especificadas no encontradas'}), 400
+        
+        # Get preview data
+        preview_df = df[[time_column, value_column]].head(limit)
+        
+        return jsonify({
+            'success': True,
+            'preview': preview_df.to_dict('records'),
+            'total_rows': len(df)
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Error en vista previa: {str(e)}'}), 500
+
+@app.route('/analyze_model_type', methods=['POST'])
+def analyze_model_type():
+    """Analyze time series model type using mean-variance correlation method"""
+    try:
+        data = request.get_json()
+        filename = data.get('filename')
+        time_column = data.get('time_column')
+        value_column = data.get('value_column')
+        num_segments = data.get('num_segments', 4)
+        
+        if not all([filename, time_column, value_column]):
+            return jsonify({'error': 'Faltan parámetros requeridos'}), 400
+        
+        df, error = safe_load_file(filename)
+        if error:
+            return jsonify({'error': error}), 400
+        
+        # Validate columns exist
+        if time_column not in df.columns or value_column not in df.columns:
+            return jsonify({'error': 'Columnas especificadas no encontradas'}), 400
+        
+        # Process data
+        df = df[[time_column, value_column]].dropna()
+        values = df[value_column].astype(float).values
+        
+        if len(values) < num_segments * 2:
+            return jsonify({'error': f'Se necesitan al menos {num_segments * 2} observaciones para {num_segments} segmentos'}), 400
+        
+        # Perform analysis
+        analysis_result = perform_segment_analysis(values, num_segments)
+        
+        # Add data for plotting
+        analysis_result['data_for_plot'] = [
+            {'index': i+1, 'value': float(val)} for i, val in enumerate(values)
+        ]
+        
+        return jsonify({
+            'success': True,
+            'analysis': analysis_result
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Error en análisis: {str(e)}'}), 500
+
+def perform_segment_analysis(values, num_segments):
+    """Perform mean-variance correlation analysis on time series segments"""
+    n = len(values)
+    segment_size = n // num_segments
+    
+    # Basic statistics
+    media_global = np.mean(values)
+    desviacion_global = np.std(values)
+    varianza_global = np.var(values, ddof=1)
+    coef_variacion = (desviacion_global / media_global) * 100
+    
+    # Segment analysis
+    segments = []
+    medias = []
+    varianzas = []
+    
+    for i in range(num_segments):
+        start_idx = i * segment_size
+        end_idx = (i + 1) * segment_size if i < num_segments - 1 else n
+        segment_data = values[start_idx:end_idx]
+        
+        media_seg = np.mean(segment_data)
+        varianza_seg = np.var(segment_data, ddof=1)
+        desviacion_seg = np.std(segment_data, ddof=1)
+        cv_seg = (desviacion_seg / media_seg) * 100 if media_seg != 0 else 0
+        
+        segments.append({
+            'segmento': i + 1,
+            'inicio': start_idx + 1,
+            'fin': end_idx,
+            'tamaño': len(segment_data),
+            'media': float(media_seg),
+            'varianza': float(varianza_seg),
+            'desviacion': float(desviacion_seg),
+            'cv': float(cv_seg),
+            'min': float(np.min(segment_data)),
+            'max': float(np.max(segment_data))
+        })
+        
+        medias.append(media_seg)
+        varianzas.append(varianza_seg)
+    
+    # Mean-variance correlation
+    if len(medias) > 1:
+        correlation = np.corrcoef(medias, varianzas)[0, 1]
+        if np.isnan(correlation):
+            correlation = 0.0
+    else:
+        correlation = 0.0
+    
+    # Simple moving average trend
+    window = min(4, max(2, n // 8))
+    trend = []
+    for i in range(window-1, n):
+        trend.append(float(np.mean(values[i-window+1:i+1])))
+    
+    # Decision criteria
+    criteria = {
+        'correlacionMediaVarianza': {
+            'valor': float(correlation),
+            'criterio': 'ADITIVO' if abs(correlation) < 0.5 else 'MULTIPLICATIVO',
+            'descripcion': 'Correlación entre medias y varianzas de segmentos'
+        },
+        'coeficienteVariacion': {
+            'valor': float(coef_variacion),
+            'criterio': 'ADITIVO' if coef_variacion < 20 else 'MULTIPLICATIVO',
+            'descripcion': 'Coeficiente de variación general'
+        }
+    }
+    
+    # Relative changes analysis
+    cambios_relativos = []
+    for i in range(1, len(values)):
+        if values[i-1] != 0:
+            cambio_rel = abs((values[i] - values[i-1]) / values[i-1]) * 100
+            cambios_relativos.append(cambio_rel)
+    
+    media_cambios_rel = np.mean(cambios_relativos) if cambios_relativos else 0
+    
+    criteria['cambiosRelativos'] = {
+        'valor': float(media_cambios_rel),
+        'criterio': 'ADITIVO' if media_cambios_rel < 15 else 'MULTIPLICATIVO',
+        'descripcion': 'Promedio de cambios relativos consecutivos'
+    }
+    
+    # Final recommendation (majority vote)
+    votos = [c['criterio'] for c in criteria.values()]
+    votos_aditivo = votos.count('ADITIVO')
+    recomendacion = 'ADITIVO' if votos_aditivo >= 2 else 'MULTIPLICATIVO'
+    confianza = max(votos_aditivo, len(votos) - votos_aditivo) / len(votos)
+    
+    return {
+        'estadisticas_basicas': {
+            'n': n,
+            'media': float(media_global),
+            'desviacion': float(desviacion_global),
+            'varianza': float(varianza_global),
+            'coefVariacion': float(coef_variacion),
+            'min': float(np.min(values)),
+            'max': float(np.max(values))
+        },
+        'segmentos': segments,
+        'correlacion_media_varianza': float(correlation),
+        'trend': trend,
+        'criterios': criteria,
+        'recomendacion_final': recomendacion,
+        'confianza': float(confianza)
+    }
 
 @app.route('/health')
 def health_check():
