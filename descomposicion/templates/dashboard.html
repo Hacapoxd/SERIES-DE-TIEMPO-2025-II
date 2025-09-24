@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Series de Tiempo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="fas fa-chart-line me-2"></i>
+                Dashboard Series de Tiempo
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">
+                            <i class="fas fa-home me-1"></i>Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/visualization">
+                            <i class="fas fa-chart-line me-1"></i>Visualización
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/decomposition">
+                            <i class="fas fa-project-diagram me-1"></i>Descomposición
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/analisis_comparativo">
+                            <i class="fas fa-analytics me-1"></i>Análisis Comparativo
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/modelo_de_serie">
+                            <i class="fas fa-brain me-1"></i>Modelo de Serie
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid" style="margin-top: 76px;">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-2 d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                        <span>Navegación</span>
+                    </h6>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-section="upload">
+                                <i class="fas fa-upload me-2"></i>
+                                Cargar Datos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/visualization">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Visualización
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/decomposition">
+                                <i class="fas fa-project-diagram me-2"></i>
+                                Descomposición H-W
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/analisis_comparativo">
+                                <i class="fas fa-analytics me-2"></i>
+                                Análisis Comparativo
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/modelo_de_serie">
+                                <i class="fas fa-brain me-2"></i>
+                                Modelo de Serie
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-10 ms-sm-auto px-md-4">
+                <!-- Welcome Section -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="fas fa-chart-line text-primary me-2"></i>
+                        Bienvenido al Dashboard de Series de Tiempo
+                    </h1>
+                </div>
+
+                <!-- Welcome Cards -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card welcome-card">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h3 class="card-title text-primary">
+                                            <i class="fas fa-rocket me-2"></i>
+                                            ¡Comienza tu Análisis de Series de Tiempo!
+                                        </h3>
+                                        <p class="card-text lead">
+                                            Esta plataforma te permite analizar, visualizar y generar pronósticos 
+                                            para tus series de tiempo de manera intuitiva y profesional.
+                                        </p>
+                                        <p class="card-text">
+                                            Utiliza el panel de navegación para acceder a las diferentes funcionalidades 
+                                            del dashboard y comenzar a trabajar con tus datos.
+                                        </p>
+                                    </div>
+                                    <div class="col-md-4 text-center">
+                                        <i class="fas fa-chart-area display-1 text-primary opacity-75"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-6 col-lg-3 mb-3">
+                        <div class="card feature-card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-upload fa-2x text-success mb-3"></i>
+                                <h5 class="card-title">Carga de Datos</h5>
+                                <p class="card-text">
+                                    Importa fácilmente tus series de tiempo desde archivos CSV, Excel o bases de datos.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-3">
+                        <div class="card feature-card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-line fa-2x text-info mb-3"></i>
+                                <h5 class="card-title">Visualización</h5>
+                                <p class="card-text">
+                                    Crea gráficos interactivos y personalizables para explorar tus datos.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-3">
+                        <div class="card feature-card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-crystal-ball fa-2x text-warning mb-3"></i>
+                                <h5 class="card-title">Pronósticos</h5>
+                                <p class="card-text">
+                                    Genera predicciones precisas utilizando algoritmos avanzados de machine learning.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-3">
+                        <div class="card feature-card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-download fa-2x text-danger mb-3"></i>
+                                <h5 class="card-title">Exportación</h5>
+                                <p class="card-text">
+                                    Descarga tus análisis y resultados en múltiples formatos para presentaciones.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Getting Started Section -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-play-circle me-2"></i>
+                                    Pasos para Comenzar
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <div class="step-item">
+                                            <div class="step-number">1</div>
+                                            <h6>Cargar Datos</h6>
+                                            <p class="text-muted">
+                                                Sube tu archivo de series de tiempo utilizando la sección "Cargar Datos".
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="step-item">
+                                            <div class="step-number">2</div>
+                                            <h6>Explorar Datos</h6>
+                                            <p class="text-muted">
+                                                Utiliza las herramientas de visualización para entender tus datos.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="step-item">
+                                            <div class="step-number">3</div>
+                                            <h6>Generar Análisis</h6>
+                                            <p class="text-muted">
+                                                Crea pronósticos y análisis estadísticos avanzados.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
