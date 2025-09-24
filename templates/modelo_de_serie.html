@@ -3,70 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modelo de Serie - Time Series Dashboard</title>
-    
-    <!-- Bootstrap CSS -->
+    <title>Modelo de Serie - Series de Tiempo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-    
-    <!-- React & ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Recharts -->
-    <script src="https://unpkg.com/recharts@2.8.0/umd/Recharts.js"></script>
-    
-    <!-- Math.js -->
-    <script src="https://unpkg.com/mathjs@11.11.3/lib/browser/math.min.js"></script>
-    
-    <!-- PapaParse -->
-    <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/">
                 <i class="fas fa-chart-line me-2"></i>
-                Time Series Dashboard
+                Dashboard Series de Tiempo
             </a>
-            
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('dashboard') }}">
-                            <i class="fas fa-home me-1"></i>Dashboard
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-home me-1"></i>Inicio
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('visualization') }}">
-                            <i class="fas fa-chart-area me-1"></i>Visualización
+                        <a class="nav-link" href="/visualization">
+                            <i class="fas fa-chart-line me-1"></i>Visualización
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('decomposition') }}">
-                            <i class="fas fa-layer-group me-1"></i>Descomposición
+                        <a class="nav-link" href="/decomposition">
+                            <i class="fas fa-project-diagram me-1"></i>Descomposición
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('analisis_comparativo') }}">
-                            <i class="fas fa-balance-scale me-1"></i>Análisis Comparativo
+                        <a class="nav-link" href="/analisis_comparativo">
+                            <i class="fas fa-analytics me-1"></i>Análisis Comparativo
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="{{ url_for('modelo_de_serie') }}">
+                        <a class="nav-link active" href="/modelo_de_serie">
                             <i class="fas fa-brain me-1"></i>Modelo de Serie
                         </a>
                     </li>
@@ -75,499 +52,224 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <div class="container-fluid py-4">
-        <div id="timeSeriesAnalyzer"></div>
+    <div class="container-fluid" style="margin-top: 76px;">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-2 d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                        <span>Navegación</span>
+                    </h6>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/visualization">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Visualización
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/decomposition">
+                                <i class="fas fa-project-diagram me-2"></i>
+                                Descomposición H-W
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/analisis_comparativo">
+                                <i class="fas fa-analytics me-2"></i>
+                                Análisis Comparativo
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/modelo_de_serie">
+                                <i class="fas fa-brain me-2"></i>
+                                Modelo de Serie
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-10 ms-sm-auto px-md-4">
+                <!-- Header Section -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="fas fa-brain text-primary me-2"></i>
+                        Analizador de Modelo de Serie
+                    </h1>
+                </div>
+
+                <div class="alert alert-info mb-4">
+                    <h6><i class="fas fa-lightbulb me-2"></i>Objetivo del Análisis</h6>
+                    <p class="mb-0">Determina si usar descomposición <strong>aditiva</strong> o <strong>multiplicativa</strong> basándose en el análisis de correlación media-varianza por segmentos.</p>
+                </div>
+
+                <!-- Step 1: Upload Data -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-upload me-2"></i>
+                                    Paso 1: Cargar Datos CSV
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <form id="uploadForm" enctype="multipart/form-data">
+                                            <div class="mb-3">
+                                                <label for="fileInput" class="form-label">Seleccionar archivo CSV</label>
+                                                <input type="file" class="form-control" id="fileInput" name="file" accept=".csv" required>
+                                                <div class="form-text">Solo archivos CSV son soportados para este análisis</div>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-cloud-upload-alt me-2"></i>
+                                                Cargar Archivo
+                                            </button>
+                                        </form>
+                                        
+                                        <!-- Upload Status -->
+                                        <div id="uploadStatus" class="mt-3"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="alert alert-warning">
+                                            <h6><i class="fas fa-exclamation-triangle me-2"></i>Requisitos del archivo:</h6>
+                                            <ul class="mb-0">
+                                                <li>Archivo en formato CSV</li>
+                                                <li>Una columna con períodos/tiempo</li>
+                                                <li>Una columna con valores numéricos</li>
+                                                <li>Mínimo 16 observaciones para análisis confiable</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Column Selection and Configuration -->
+                <div class="row mb-4" id="columnSelectionStep" style="display: none;">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-cogs me-2"></i>
+                                    Paso 2: Configurar Análisis
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label for="timeColumn" class="form-label">Columna de Tiempo/Período</label>
+                                        <select class="form-select" id="timeColumn" required>
+                                            <option value="">Seleccionar columna...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="valueColumn" class="form-label">Columna de Valores</label>
+                                        <select class="form-select" id="valueColumn" required>
+                                            <option value="">Seleccionar columna...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="numSegments" class="form-label">Número de Segmentos</label>
+                                        <select class="form-select" id="numSegments">
+                                            <option value="3">3 segmentos</option>
+                                            <option value="4" selected>4 segmentos (recomendado)</option>
+                                            <option value="5">5 segmentos</option>
+                                            <option value="6">6 segmentos</option>
+                                            <option value="8">8 segmentos</option>
+                                            <option value="10">10 segmentos</option>
+                                        </select>
+                                        <div class="form-text" id="segmentInfo"></div>
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button type="button" class="btn btn-success" id="analyzeBtn">
+                                            <i class="fas fa-chart-area me-2"></i>
+                                            Analizar Serie
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Data Preview -->
+                                <div id="dataPreview" class="mt-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Analysis Results -->
+                <div class="row mb-4" id="analysisResults" style="display: none;">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    Paso 3: Visualización de la Serie
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="seriesPlot"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Segment Analysis -->
+                <div class="row mb-4" id="segmentAnalysis" style="display: none;">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-table me-2"></i>
+                                    Paso 4: Análisis por Segmentos
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="segmentTable"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: Decision Results -->
+                <div class="row mb-4" id="decisionResults" style="display: none;">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    Paso 5: Recomendación del Modelo
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="modelRecommendation"></div>
+                                <div id="criteriaTable" class="mt-4"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="loadingSpinner" class="text-center" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Analizando...</span>
+                    </div>
+                    <p class="mt-2">Procesando análisis de serie temporal...</p>
+                </div>
+            </main>
+        </div>
     </div>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Main Application Script -->
-    <script type="text/javascript">
-        // TimeSeriesAnalyzer Component converted from TSX
-        const { useState, useCallback } = React;
-        const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = Recharts;
-
-        const TimeSeriesAnalyzer = () => {
-            const [csvData, setCsvData] = useState(null);
-            const [headers, setHeaders] = useState([]);
-            const [selectedTimeCol, setSelectedTimeCol] = useState('');
-            const [selectedValueCol, setSelectedValueCol] = useState('');
-            const [numSegmentos, setNumSegmentos] = useState(4);
-            const [analysis, setAnalysis] = useState(null);
-            const [error, setError] = useState('');
-
-            // Función para calcular varianza manualmente
-            const calcularVarianza = (datos) => {
-                if (datos.length === 0) return 0;
-                const media = math.mean(datos);
-                const sumaCuadrados = datos.reduce((sum, valor) => sum + Math.pow(valor - media, 2), 0);
-                return sumaCuadrados / Math.max(datos.length - 1, 1);
-            };
-
-            // Manejar carga de archivo
-            const handleFileUpload = useCallback((event) => {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                setError('');
-                setCsvData(null);
-                setAnalysis(null);
-
-                Papa.parse(file, {
-                    header: true,
-                    skipEmptyLines: true,
-                    dynamicTyping: true,
-                    complete: (results) => {
-                        if (results.errors.length > 0) {
-                            setError('Error al parsear el archivo: ' + results.errors[0].message);
-                            return;
-                        }
-
-                        if (results.data.length === 0) {
-                            setError('El archivo está vacío');
-                            return;
-                        }
-
-                        const cleanHeaders = Object.keys(results.data[0]).map(h => h.trim());
-                        setHeaders(cleanHeaders);
-                        setCsvData(results.data);
-                        setSelectedTimeCol('');
-                        setSelectedValueCol('');
-                    },
-                    error: (error) => {
-                        setError('Error al leer el archivo: ' + error.message);
-                    }
-                });
-            }, []);
-
-            // Procesar datos y realizar análisis
-            const processData = useCallback(() => {
-                if (!csvData || !selectedTimeCol || !selectedValueCol) return;
-
-                try {
-                    // Filtrar y procesar datos
-                    const processedData = csvData
-                        .map((row, index) => {
-                            const value = parseFloat(row[selectedValueCol]);
-                            return {
-                                index: index + 1,
-                                time: row[selectedTimeCol],
-                                value: isNaN(value) ? null : value
-                            };
-                        })
-                        .filter(row => row.value !== null && row.value !== undefined);
-
-                    if (processedData.length < numSegmentos * 2) {
-                        setError(`Se necesitan al menos ${numSegmentos * 2} puntos de datos válidos para ${numSegmentos} segmentos`);
-                        return;
-                    }
-
-                    // Realizar análisis completo
-                    const resultado = realizarAnalisisCompleto(processedData);
-                    setAnalysis(resultado);
-                    setError('');
-
-                } catch (err) {
-                    setError('Error en el procesamiento: ' + err.message);
-                }
-            }, [csvData, selectedTimeCol, selectedValueCol, numSegmentos]);
-
-            // Función principal de análisis
-            const realizarAnalisisCompleto = (datos) => {
-                const valores = datos.map(d => d.value);
-                const n = valores.length;
-
-                // 1. Estadísticas básicas
-                const media = math.mean(valores);
-                const desviacion = math.std(valores);
-                const varianza = calcularVarianza(valores);
-                const coefVariacion = (desviacion / media) * 100;
-
-                // 2. Análisis por segmentos (Media-Varianza)
-                const segmentos = [];
-                const tamSegmento = Math.floor(n / numSegmentos);
-
-                for (let i = 0; i < numSegmentos; i++) {
-                    const inicio = i * tamSegmento;
-                    const fin = i === numSegmentos - 1 ? n : (i + 1) * tamSegmento;
-                    const segmento = valores.slice(inicio, fin);
-                    
-                    const mediaSegmento = math.mean(segmento);
-                    const varianzaSegmento = calcularVarianza(segmento);
-                    const desviacionSegmento = math.std(segmento);
-                    
-                    segmentos.push({
-                        segmento: i + 1,
-                        inicio: inicio + 1,
-                        fin: fin,
-                        tamaño: segmento.length,
-                        media: mediaSegmento,
-                        varianza: varianzaSegmento,
-                        desviacion: desviacionSegmento,
-                        cv: (desviacionSegmento / mediaSegmento) * 100,
-                        min: Math.min(...segmento),
-                        max: Math.max(...segmento)
-                    });
-                }
-
-                // 3. Correlación Media-Varianza
-                const medias = segmentos.map(s => s.media);
-                const varianzas = segmentos.map(s => s.varianza);
-                
-                const mediaDeMedias = math.mean(medias);
-                const mediaDeVarianzas = math.mean(varianzas);
-                
-                const numerador = medias.reduce((sum, media, i) => 
-                    sum + (media - mediaDeMedias) * (varianzas[i] - mediaDeVarianzas), 0);
-                const denominador = Math.sqrt(
-                    medias.reduce((sum, media) => sum + Math.pow(media - mediaDeMedias, 2), 0) *
-                    varianzas.reduce((sum, varianza) => sum + Math.pow(varianza - mediaDeVarianzas, 2), 0)
-                );
-                
-                const correlacionMediaVarianza = denominador === 0 ? 0 : numerador / denominador;
-
-                // 4. Análisis de tendencia (media móvil simple)
-                const ventana = Math.min(4, Math.floor(n / 8));
-                const tendencia = valores.map((_, i) => {
-                    if (i < ventana - 1) return null;
-                    const segmentoTendencia = valores.slice(i - ventana + 1, i + 1);
-                    return math.mean(segmentoTendencia);
-                });
-
-                // 5. Cambios consecutivos
-                const cambiosAbsolutos = [];
-                const cambiosRelativos = [];
-                
-                for (let i = 1; i < valores.length; i++) {
-                    const anterior = valores[i-1];
-                    const actual = valores[i];
-                    const cambioAbs = Math.abs(actual - anterior);
-                    const cambioRel = Math.abs((actual - anterior) / anterior) * 100;
-                    
-                    cambiosAbsolutos.push(cambioAbs);
-                    cambiosRelativos.push(cambioRel);
-                }
-
-                const mediaCambiosAbsolutos = math.mean(cambiosAbsolutos);
-                const mediaCambiosRelativos = math.mean(cambiosRelativos);
-
-                // 6. Decisión del modelo
-                const criterios = {
-                    correlacionMediaVarianza: {
-                        valor: correlacionMediaVarianza,
-                        criterio: Math.abs(correlacionMediaVarianza) < 0.5 ? 'ADITIVO' : 'MULTIPLICATIVO',
-                        descripcion: 'Correlación entre medias y varianzas de segmentos'
-                    },
-                    coeficienteVariacion: {
-                        valor: coefVariacion,
-                        criterio: coefVariacion < 20 ? 'ADITIVO' : 'MULTIPLICATIVO',
-                        descripcion: 'Coeficiente de variación general'
-                    },
-                    cambiosRelativos: {
-                        valor: mediaCambiosRelativos,
-                        criterio: mediaCambiosRelativos < 15 ? 'ADITIVO' : 'MULTIPLICATIVO',
-                        descripcion: 'Promedio de cambios relativos consecutivos'
-                    }
-                };
-
-                // Voto mayoría
-                const votos = Object.values(criterios).map(c => c.criterio);
-                const votosAditivo = votos.filter(v => v === 'ADITIVO').length;
-                const recomendacionFinal = votosAditivo >= 2 ? 'ADITIVO' : 'MULTIPLICATIVO';
-
-                return {
-                    datosOriginales: datos,
-                    estadisticasBasicas: {
-                        n,
-                        media,
-                        desviacion,
-                        varianza,
-                        coefVariacion,
-                        min: Math.min(...valores),
-                        max: Math.max(...valores)
-                    },
-                    segmentos,
-                    correlacionMediaVarianza,
-                    tendencia: tendencia.filter(t => t !== null),
-                    cambios: {
-                        absolutos: mediaCambiosAbsolutos,
-                        relativos: mediaCambiosRelativos
-                    },
-                    criterios,
-                    recomendacionFinal,
-                    confianza: Math.max(votosAditivo, votos.length - votosAditivo) / votos.length
-                };
-            };
-
-            // Datos para gráfico
-            const chartData = analysis ? analysis.datosOriginales.map((d, i) => ({
-                index: d.index,
-                value: d.value,
-                trend: i < analysis.tendencia.length ? analysis.tendencia[i] : null
-            })) : [];
-
-            return React.createElement('div', { className: 'p-6 space-y-6 max-w-7xl mx-auto' },
-                // Header
-                React.createElement('div', { className: 'text-center' },
-                    React.createElement('h1', { className: 'text-3xl font-bold mb-2' }, '📊 Analizador de Series Temporales'),
-                    React.createElement('p', { className: 'text-gray-600' }, 'Determina si usar descomposición aditiva o multiplicativa')
-                ),
-
-                // File Upload Section
-                React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow border' },
-                    React.createElement('h2', { className: 'text-xl font-semibold mb-4' }, '1. Cargar Datos'),
-                    
-                    React.createElement('div', { className: 'space-y-4' },
-                        React.createElement('div', null,
-                            React.createElement('label', { className: 'block text-sm font-medium mb-2' }, 'Seleccionar archivo CSV:'),
-                            React.createElement('input', {
-                                type: 'file',
-                                accept: '.csv',
-                                onChange: handleFileUpload,
-                                className: 'block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
-                            })
-                        ),
-
-                        headers.length > 0 && React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
-                            React.createElement('div', null,
-                                React.createElement('label', { className: 'block text-sm font-medium mb-2' }, 'Columna de Tiempo/Período:'),
-                                React.createElement('select', {
-                                    value: selectedTimeCol,
-                                    onChange: (e) => setSelectedTimeCol(e.target.value),
-                                    className: 'w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                                },
-                                    React.createElement('option', { value: '' }, 'Seleccionar columna...'),
-                                    headers.map(header => React.createElement('option', { key: header, value: header }, header))
-                                )
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { className: 'block text-sm font-medium mb-2' }, 'Columna de Valores:'),
-                                React.createElement('select', {
-                                    value: selectedValueCol,
-                                    onChange: (e) => setSelectedValueCol(e.target.value),
-                                    className: 'w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                                },
-                                    React.createElement('option', { value: '' }, 'Seleccionar columna...'),
-                                    headers.map(header => React.createElement('option', { key: header, value: header }, header))
-                                )
-                            )
-                        ),
-
-                        headers.length > 0 && React.createElement('div', { className: 'mt-4' },
-                            React.createElement('label', { className: 'block text-sm font-medium mb-2' }, 'Número de Segmentos para Análisis:'),
-                            React.createElement('div', { className: 'flex items-center space-x-4' },
-                                React.createElement('select', {
-                                    value: numSegmentos,
-                                    onChange: (e) => setNumSegmentos(parseInt(e.target.value)),
-                                    className: 'p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                                },
-                                    [3, 4, 5, 6, 8, 10].map(num => 
-                                        React.createElement('option', { key: num, value: num }, 
-                                            `${num} segmentos${num === 4 ? ' (recomendado)' : ''}`
-                                        )
-                                    )
-                                ),
-                                React.createElement('span', { className: 'text-sm text-gray-600' },
-                                    csvData ? `(${Math.floor(csvData.length / numSegmentos)} obs. aprox. por segmento)` : ''
-                                )
-                            ),
-                            React.createElement('p', { 
-                                className: 'text-xs text-gray-500 mt-1',
-                                dangerouslySetInnerHTML: { 
-                                    __html: '📋 <strong>Guía:</strong> 3-4 segmentos para series cortas (&lt;50 obs.), 5-6 para series medianas (50-100 obs.), 8-10 para series largas (&gt;100 obs.)' 
-                                }
-                            })
-                        ),
-
-                        selectedTimeCol && selectedValueCol && React.createElement('div', { className: 'flex items-center space-x-4' },
-                            React.createElement('button', {
-                                onClick: processData,
-                                className: 'bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors'
-                            }, `🔍 Analizar Serie (${numSegmentos} segmentos)`),
-                            React.createElement('div', { className: 'text-sm text-gray-600' },
-                                csvData && `Datos cargados: ${csvData.length} observaciones`
-                            )
-                        ),
-
-                        error && React.createElement('div', { 
-                            className: 'bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded' 
-                        }, error)
-                    )
-                ),
-
-                // Analysis Results (only when analysis is available)
-                analysis && React.createElement('div', { className: 'space-y-6' },
-                    // Chart Section
-                    React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow' },
-                        React.createElement('h2', { className: 'text-xl font-semibold mb-4' }, '2. Visualización de la Serie'),
-                        React.createElement(ResponsiveContainer, { width: '100%', height: 400 },
-                            React.createElement(LineChart, { data: chartData },
-                                React.createElement(CartesianGrid, { strokeDasharray: '3 3' }),
-                                React.createElement(XAxis, { dataKey: 'index' }),
-                                React.createElement(YAxis),
-                                React.createElement(Tooltip),
-                                React.createElement(Legend),
-                                React.createElement(Line, {
-                                    type: 'monotone',
-                                    dataKey: 'value',
-                                    stroke: '#2563eb',
-                                    strokeWidth: 2,
-                                    name: 'Serie Original',
-                                    dot: false
-                                }),
-                                React.createElement(Line, {
-                                    type: 'monotone',
-                                    dataKey: 'trend',
-                                    stroke: '#dc2626',
-                                    strokeWidth: 2,
-                                    strokeDasharray: '5 5',
-                                    name: 'Tendencia',
-                                    connectNulls: false,
-                                    dot: false
-                                })
-                            )
-                        )
-                    ),
-
-                    // Segments Analysis
-                    React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow' },
-                        React.createElement('h2', { className: 'text-xl font-semibold mb-4' }, '3. Análisis por Segmentos'),
-                        React.createElement('div', { className: 'overflow-x-auto' },
-                            React.createElement('table', { className: 'min-w-full border-collapse border border-gray-300' },
-                                React.createElement('thead', { className: 'bg-gray-50' },
-                                    React.createElement('tr', null,
-                                        ['Segmento', 'Rango', 'Tamaño', 'Media', 'Varianza', 'Desv. Est.', 'CV (%)', 'Min', 'Max'].map(header =>
-                                            React.createElement('th', {
-                                                key: header,
-                                                className: 'border border-gray-300 px-4 py-2 text-left font-semibold'
-                                            }, header)
-                                        )
-                                    )
-                                ),
-                                React.createElement('tbody', null,
-                                    analysis.segmentos.map(seg =>
-                                        React.createElement('tr', { key: seg.segmento, className: 'hover:bg-gray-50' },
-                                            React.createElement('td', { className: 'border border-gray-300 px-4 py-2 font-medium' }, seg.segmento),
-                                            React.createElement('td', { className: 'border border-gray-300 px-4 py-2' }, `${seg.inicio}-${seg.fin}`),
-                                            React.createElement('td', { className: 'border border-gray-300 px-4 py-2' }, seg.tamaño),
-                                            React.createElement('td', { className: 'border border-gray-300 px-4 py-2' }, seg.media.toFixed(2)),
-                                            React.createElement('td', { className: 'border border-gray-300 px-4 py-2' }, seg.varianza.toFixed(2)),
-                                            React.createElement('td', { className: 'border border-gray-300 px-4 py-2' }, seg.desviacion.toFixed(2)),
-                                            React.createElement('td', { className: 'border border-gray-300 px-4 py-2' }, seg.cv.toFixed(1) + '%'),
-                                            React.createElement('td', { className: 'border border-gray-300 px-4 py-2' }, seg.min.toFixed(2)),
-                                            React.createElement('td', { className: 'border border-gray-300 px-4 py-2' }, seg.max.toFixed(2))
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    ),
-
-                    // Decision Table
-                    React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow' },
-                        React.createElement('h2', { className: 'text-xl font-semibold mb-4' }, '4. Análisis de Decisión del Modelo'),
-                        
-                        React.createElement('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6' },
-                            React.createElement('div', null,
-                                React.createElement('h3', { className: 'font-semibold mb-3' }, 'Criterios de Evaluación'),
-                                React.createElement('div', { className: 'overflow-x-auto' },
-                                    React.createElement('table', { className: 'w-full border-collapse border border-gray-300' },
-                                        React.createElement('thead', { className: 'bg-gray-50' },
-                                            React.createElement('tr', null,
-                                                ['Criterio', 'Valor', 'Recomendación'].map(header =>
-                                                    React.createElement('th', {
-                                                        key: header,
-                                                        className: 'border border-gray-300 px-3 py-2 text-left font-semibold text-sm'
-                                                    }, header)
-                                                )
-                                            )
-                                        ),
-                                        React.createElement('tbody', null,
-                                            Object.entries(analysis.criterios).map(([key, criterio]) =>
-                                                React.createElement('tr', { key, className: 'hover:bg-gray-50' },
-                                                    React.createElement('td', { className: 'border border-gray-300 px-3 py-2 text-sm' }, criterio.descripcion),
-                                                    React.createElement('td', { className: 'border border-gray-300 px-3 py-2 font-mono text-sm' }, criterio.valor.toFixed(3)),
-                                                    React.createElement('td', { 
-                                                        className: `border border-gray-300 px-3 py-2 text-sm font-medium ${
-                                                            criterio.criterio === 'ADITIVO' ? 'text-green-700' : 'text-orange-700'
-                                                        }`
-                                                    }, criterio.criterio)
-                                                )
-                                            )
-                                        )
-                                    )
-                                )
-                            ),
-                            
-                            React.createElement('div', null,
-                                React.createElement('h3', { className: 'font-semibold mb-3' }, 'Recomendación Final'),
-                                React.createElement('div', { 
-                                    className: `p-6 rounded-lg text-center ${
-                                        analysis.recomendacionFinal === 'ADITIVO' ? 'bg-green-50 border-2 border-green-200' : 'bg-orange-50 border-2 border-orange-200'
-                                    }`
-                                },
-                                    React.createElement('div', { 
-                                        className: `text-3xl font-bold mb-2 ${
-                                            analysis.recomendacionFinal === 'ADITIVO' ? 'text-green-700' : 'text-orange-700'
-                                        }`
-                                    }, analysis.recomendacionFinal === 'ADITIVO' ? '🟢 MODELO ADITIVO' : '🔶 MODELO MULTIPLICATIVO'),
-                                    React.createElement('p', { className: 'text-sm text-gray-600 mb-3' }, 
-                                        `Confianza: ${(analysis.confianza * 100).toFixed(1)}%`
-                                    ),
-                                    React.createElement('div', { className: 'text-left text-sm' },
-                                        React.createElement('p', { className: 'font-medium mb-2' }, 
-                                            analysis.recomendacionFinal === 'ADITIVO' ? 'Características del Modelo Aditivo:' : 'Características del Modelo Multiplicativo:'
-                                        ),
-                                        React.createElement('ul', { className: 'list-disc list-inside space-y-1 text-gray-700' },
-                                            analysis.recomendacionFinal === 'ADITIVO' ? [
-                                                React.createElement('li', { key: 1 }, 'La variabilidad estacional es constante a lo largo del tiempo'),
-                                                React.createElement('li', { key: 2 }, 'Los componentes se suman: Y(t) = Tendencia + Estacional + Error'),
-                                                React.createElement('li', { key: 3 }, 'Apropiado cuando los patrones estacionales mantienen la misma amplitud')
-                                            ] : [
-                                                React.createElement('li', { key: 1 }, 'La variabilidad estacional cambia proporcionalmente con el nivel'),
-                                                React.createElement('li', { key: 2 }, 'Los componentes se multiplican: Y(t) = Tendencia × Estacional × Error'),
-                                                React.createElement('li', { key: 3 }, 'Apropiado cuando los patrones estacionales crecen con la serie')
-                                            ]
-                                        )
-                                    )
-                                )
-                            )
-                        ),
-                        
-                        // Statistical Summary
-                        React.createElement('div', { className: 'mt-6 p-4 bg-blue-50 rounded-lg' },
-                            React.createElement('h4', { className: 'font-semibold mb-2' }, '📊 Resumen Estadístico'),
-                            React.createElement('div', { className: 'grid grid-cols-2 md:grid-cols-4 gap-4 text-sm' },
-                                React.createElement('div', null,
-                                    React.createElement('span', { className: 'font-medium' }, 'Media: '),
-                                    React.createElement('span', { className: 'font-mono' }, analysis.estadisticasBasicas.media.toFixed(2))
-                                ),
-                                React.createElement('div', null,
-                                    React.createElement('span', { className: 'font-medium' }, 'Desv. Est.: '),
-                                    React.createElement('span', { className: 'font-mono' }, analysis.estadisticasBasicas.desviacion.toFixed(2))
-                                ),
-                                React.createElement('div', null,
-                                    React.createElement('span', { className: 'font-medium' }, 'CV: '),
-                                    React.createElement('span', { className: 'font-mono' }, analysis.estadisticasBasicas.coefVariacion.toFixed(1) + '%')
-                                ),
-                                React.createElement('div', null,
-                                    React.createElement('span', { className: 'font-medium' }, 'Corr. M-V: '),
-                                    React.createElement('span', { className: 'font-mono' }, analysis.correlacionMediaVarianza.toFixed(3))
-                                )
-                            )
-                        )
-                    )
-                )
-            );
-        };
-
-        // Render the component when the page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            const root = ReactDOM.createRoot(document.getElementById('timeSeriesAnalyzer'));
-            root.render(React.createElement(TimeSeriesAnalyzer));
-        });
-    </script>
+    <script src="{{ url_for('static', filename='js/modelo_de_serie.js') }}"></script>
 </body>
 </html>
